@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@utils/*": ["src/utils/*"],
+      "@interfaces/*": ["src/interfaces"]
+    },
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "include": ["**/*"],
+  "exclude": ["dist"]
+}

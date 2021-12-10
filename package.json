@@ -1,0 +1,38 @@
+{
+  "name": "@MatthiasWanner/request-fiat-to-erc20-payment",
+  "version": "0.0.1",
+  "description": "A handler to pay your Request network invoices in cryptos. Only works in this way: FIAT ➡️ ERC20 (for now 😉).",
+  "main": "dist/index.js",
+  "author": "Matthias Wanner",
+  "license": "ISC",
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -b"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "dependencies": {
+    "@requestnetwork/payment-processor": "^0.37.1-next.1587",
+    "axios": "^0.24.0",
+    "ethers": "^5.5.2"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.2",
+    "typescript": "^4.5.2"
+  },
+  "keywords": [
+    "payment",
+    "crypto",
+    "request",
+    "invoices",
+    "blockchain",
+    "e-commerce"
+  ]
+}
