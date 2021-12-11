@@ -1,3 +1,7 @@
+import { providers } from 'ethers';
+
+declare module '@MatthiasWanner/request-fiat-to-erc20-payment';
+
 /* Crypto compare api interfaces */
 
 /**
@@ -39,4 +43,21 @@ export interface ICurrencyInfosMeta {
 export interface IGetOneCurrencyInfos extends IGetCurrenciesInfos {
   metadata: ICurrencyInfosMeta;
   exchangeInfo: IExchangeInfos;
+}
+
+/* window.ethereum manual type */
+
+export interface IWindowEthereum extends providers.ExternalProvider {
+  //  ...someOtherProperties;
+  selectedAddress: string;
+  chainId: string;
+  isMetamask: boolean;
+  networkVersion: string;
+}
+
+/* Ethereum utils */
+
+export enum EthereumNetwork {
+  MATIC = 'matic',
+  RINKEBY = 'rinkeby'
 }
