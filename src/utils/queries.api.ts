@@ -2,10 +2,15 @@ import {
   IGetRate,
   IGetCurrenciesInfos,
   IGetOneCurrencyInfos
-} from '@interfaces/';
+} from '../../types';
 import axios from 'axios';
 
 export const cryptoCompare = {
+  /**
+   * @param inputCurrency the reference currency (e.g. EUR)
+   * @param outputCurrency the currency to convert to (e.g. ETH)
+   * @returns the rate of the inputCurrency to the outputCurrency (e.g. {ETH: 0.01})
+   */
   getRate: async (
     inputCurrency: string,
     outputCurrency: string
@@ -19,7 +24,7 @@ export const cryptoCompare = {
 
 export const currencies = {
   getAll: async (): Promise<IGetCurrenciesInfos[]> =>
-    (await axios.get('/currency')).data,
+    (await axios.get('https://api.request.network/currency')).data,
 
   /**
    *
@@ -27,5 +32,5 @@ export const currencies = {
    * @returns infos about the currency and contains more infos about the contract like decimals and code to send to crypto compare
    */
   getOne: async (param: string): Promise<IGetOneCurrencyInfos> =>
-    (await axios.get(`/currency/${param}`)).data
+    (await axios.get(`https://api.request.network/currency/${param}`)).data
 };
