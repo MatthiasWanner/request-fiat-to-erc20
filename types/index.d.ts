@@ -1,6 +1,6 @@
 import { providers } from 'ethers';
 
-declare module '@MatthiasWanner/request-fiat-to-erc20-payment';
+declare module 'request-fiat-to-erc20-payment';
 
 /* Crypto compare api interfaces */
 

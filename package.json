@@ -11,6 +11,14 @@
   "files": [
     "dist"
   ],
+  "homepage": "https://github.com/MatthiasWanner/request-fiat-to-erc20",
+  "bugs": {
+    "url": "https://github.com/MatthiasWanner/request-fiat-to-erc20/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MatthiasWanner/request-fiat-to-erc20"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b"

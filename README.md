@@ -12,11 +12,15 @@ Install request-fiat-to-erc20-payment with npm into your project folder
 
 ## Demo
 
-Insert gif or link to demo
+<div style="text-align:center;">
+
+![Usage demo](https://i.imgur.com/jME5F3s.gif)
+
+</div>
 
 ## Documentation
 
-You can use it in your front app simply implementing button with payRequest() onClick:
+You can use it in your front app simply implementing button with requestPayment() onClick:
 
 ```js
 import { requestPayment } from 'request-fiat-to-erc20-payment';
