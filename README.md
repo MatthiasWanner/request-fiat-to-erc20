@@ -7,7 +7,7 @@ A handler to pay your Request network invoices in cryptos. Only works in this wa
 Install request-fiat-to-erc20-payment with npm into your project folder
 
 ```bash
-  npm install request-fiat-to-erc20-payment
+  npm i @requestnetwork/payment-processor@0.37.1-next.1587 axios ethers request-fiat-to-erc20-payment
 ```
 
 ## Demo
