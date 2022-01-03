@@ -66,12 +66,9 @@ export const anyToErc20Payment = async (
   if (!request) throw new Error('No request data provided');
 
   try {
-    const {
-      decimals,
-      exchangeInfo: {
-        cryptocompare: { code: referenceCurrencySymbol }
-      }
-    } = await currencies.getOne(currencyInfos.value);
+    const { decimals, meta } = await currencies.getOne(currencyInfos.value);
+
+    const { code: referenceCurrencySymbol } = meta.exchangeInfo.cryptocompare;
 
     const rate = (
       await cryptoCompare.getRate(request.currency, referenceCurrencySymbol)
