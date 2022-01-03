@@ -20,7 +20,8 @@ Install request-fiat-to-erc20-payment with npm into your project folder
 
 ## Documentation
 
-You can use it in your front app simply implementing button with requestPayment() onClick:
+You can use it in your front app simply implementing button with requestPayment() onClick.  
+Here is an example of use in a React component (+ Tailwind CSS)
 
 ```js
 import { requestPayment } from 'request-fiat-to-erc20-payment';
@@ -28,8 +29,14 @@ import { useMetaMask } from 'metamask-react';
 
 import { IRequestData } from '@requestnetwork/types/dist/client-types';
 
+ /*
+ ⚠️ The request object as IRequestData type come from https://api.request.network/invoices/{requestId}?withRequest=true
+
+ Retrieve the response.request.request key
+ */
+
 interface IProps {
-    reqsuest: IRequestData;
+    request: IRequestData;
 }
 
 export default function Payment({request}: IProps) {
