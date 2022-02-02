@@ -1,4 +1,4 @@
-import { EthereumNetwork } from '../../types';
+import { EthereumNetwork, IWindowEthereum } from '../../types';
 
 const networks = {
   matic: {
@@ -16,13 +16,21 @@ const networks = {
  * @param ethereum represent the window.ethereum object
  * @returns void ethereum method to switch network
  */
-export const checkConnectedNetwork = async (network: string, ethereum: any) => {
+export const checkConnectedNetwork = async (
+  network: string,
+  ethereum: IWindowEthereum
+) => {
   if (!Object.keys(networks).includes(network.toLowerCase()))
     throw new Error(`Network ${network} not supported`);
 
+  if (!ethereum.request)
+    throw new Error('No window.ethereum.request method provided');
+
   const { chainId, rpcUrl } = networks[network as EthereumNetwork];
 
-  if (ethereum.chainId === chainId) return;
+  const currentChainId = await ethereum.request({ method: 'eth_chainId' });
+
+  if (currentChainId === chainId) return;
 
   try {
     // check if the chain to connect to is installed
@@ -52,4 +60,13 @@ export const checkConnectedNetwork = async (network: string, ethereum: any) => {
     }
     throw new Error(`Error connecting to ${network} network`);
   }
+};
+
+export const getWalletAddress = async (
+  ethereum: IWindowEthereum
+): Promise<string[]> => {
+  if (!ethereum.request)
+    throw new Error('No window.ethereum.request method provided');
+
+  return await ethereum.request({ method: 'eth_accounts' });
 };

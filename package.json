@@ -1,18 +1,16 @@
 {
   "name": "request-fiat-to-erc20-payment",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A handler to pay your Request network invoices in cryptos. Only works in this way: FIAT ➡️ ERC20 (for now 😉).",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
   "author": "Matthias Wanner",
   "license": "ISC",
   "publishConfig": {
     "access": "public"
   },
-  "directories": {
-    "lib": "src"
-  },
   "files": [
-    "dist"
+    "dist",
+    "types"
   ],
   "homepage": "https://github.com/MatthiasWanner/request-fiat-to-erc20",
   "bugs": {
