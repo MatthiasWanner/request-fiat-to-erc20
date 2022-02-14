@@ -70,8 +70,17 @@ export const getPaymentCurrencyContract = (
 ): string | null => {
   const paymentNetwork = getPaymentNetwork(request);
 
-  if (paymentNetwork) {
+  if (
+    paymentNetwork &&
+    paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ERC20_PROXY
+  ) {
     return request.extensions[paymentNetwork].values.acceptedTokens[0];
+  } else if (
+    paymentNetwork &&
+    paymentNetwork ===
+      ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT
+  ) {
+    return '0x4e3Decbb3645551B8A19f0eA1678079FCB33fB4c'; // 👈 FIXME: hardcoded only jEURO contract for the moment
   }
 
   return null;
@@ -93,7 +102,8 @@ export const getCurrencyInfos = (
   if (!paymentCurrencyContractAddress)
     throw new Error('No payment currency contract address provided');
 
-  const { network, feeAmount = 0 } = request.extensions[
+  //TODO: manage all network formats
+  const { network = 'matic', feeAmount = 0 } = request.extensions[
     getPaymentNetwork(request) as string
   ]?.values as ExtensionTypes.PnAnyToErc20.ICreationParameters;
 
