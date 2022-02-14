@@ -88,7 +88,8 @@ export const requestPayment = async (
       );
     }
 
-    throw new Error('Payment network not supported');
+    const tx = await payRequest(request, provider);
+    await tx.wait(1);
   } catch (error) {
     throw error;
   }
