@@ -50,7 +50,7 @@ export const anyToErc20Payment = async (
       currency: currencyInfos,
       maxToSpend
     });
-    await tx.wait(1);
+    return (await tx.wait(1)).transactionHash;
   } catch (error) {
     throw error;
   }
@@ -59,7 +59,7 @@ export const anyToErc20Payment = async (
 export const requestPayment = async (
   request: IRequestData,
   ethereum: IWindowEthereum
-): Promise<void> => {
+): Promise<string> => {
   const [payerWalletAddress] = await getWalletAddress(ethereum);
   try {
     if (!payerWalletAddress || !request) {
@@ -89,7 +89,7 @@ export const requestPayment = async (
     }
 
     const tx = await payRequest(request, provider);
-    await tx.wait(1);
+    return (await tx.wait(1)).transactionHash;
   } catch (error) {
     throw error;
   }
