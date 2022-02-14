@@ -1,4 +1,5 @@
 import { providers } from 'ethers';
+import { RequestLogicTypes } from '@requestnetwork/types';
 
 declare module 'request-fiat-to-erc20-payment';
 
@@ -22,7 +23,7 @@ export interface IGetCurrenciesInfos {
   hash: string;
   address?: string;
   decimals: number;
-  type: string;
+  type: RequestLogicTypes.CURRENCY;
   network: string;
 }
 
