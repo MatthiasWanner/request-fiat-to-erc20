@@ -1,7 +1,20 @@
 import { providers } from 'ethers';
 import { RequestLogicTypes } from '@requestnetwork/types';
+import { IConversionPaymentSettings } from '@requestnetwork/payment-processor';
 
 declare module 'request-fiat-to-erc20-payment';
+
+/* Module Types */
+
+export interface IGetCurencyInfosHandlerReturn {
+  currencyInfos: RequestLogicTypes.ICurrency;
+  decimals: number;
+  meta: ICurrencyInfosMeta;
+}
+
+export type PaymentSettingsArgs = Required<
+  Omit<IConversionPaymentSettings, 'currencyManager'>
+>;
 
 /* Crypto compare api interfaces */
 
