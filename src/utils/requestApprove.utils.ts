@@ -16,15 +16,23 @@ import {
   getCurrencyInfos,
   prepareCalculateMaxToSpendArgs
 } from './prepareRequest.utils';
-import { getPaymentNetwork } from '.';
+import { getPaymentNetwork, getRequestFees } from '.';
 
 export const hasAllowance = async (
   request: IRequestData,
-  ethereum: IWindowEthereum
+  ethereum: IWindowEthereum,
+  paymentCurrency: string
 ) => {
-  const { currencyInfos, feeAmount } = getCurrencyInfos(request);
+  const paymentNetwork = getPaymentNetwork(request);
 
-  if (!currencyInfos.network) throw new Error('No network infos provided');
+  if (paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ETH_PROXY)
+    return true;
+
+  const paymentCurrencyInfos = await getCurrencyInfos(paymentCurrency);
+
+  const { currencyInfos } = paymentCurrencyInfos;
+
+  if (!currencyInfos.network) throw new Error('Currency network not provided');
 
   await checkConnectedNetwork(currencyInfos.network, ethereum);
 
@@ -32,16 +40,16 @@ export const hasAllowance = async (
 
   const [walletAddress] = await getWalletAddress(ethereum);
 
-  const paymentNetwork = getPaymentNetwork(request);
-
   if (paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ERC20_PROXY) {
     const proxyAddress = paymentUtils.getProxyAddress(
       request,
       AnyToERC20PaymentDetector.getDeploymentInformation
     );
 
+    const feeAmount = getRequestFees(request);
+
     const maxToSpendArgs = await prepareCalculateMaxToSpendArgs(
-      currencyInfos,
+      paymentCurrencyInfos,
       request.currency
     );
 
@@ -60,24 +68,27 @@ export const hasAllowance = async (
       currencyInfos.value.toLowerCase(),
       maxToSpend
     );
+  } else {
+    return await hasErc20Approval(request, walletAddress, provider);
   }
-  return await hasErc20Approval(request, walletAddress, provider);
 };
 
 export const approveERC20Transactions = async (
   request: IRequestData,
-  ethereum: IWindowEthereum
+  ethereum: IWindowEthereum,
+  paymentCurrency: string
 ) => {
-  const { currencyInfos } = getCurrencyInfos(request);
-
-  if (!currencyInfos.network) throw new Error('No network infos provided');
-
-  await checkConnectedNetwork(currencyInfos.network, ethereum);
-
   const provider = new providers.Web3Provider(ethereum);
 
   const paymentNetwork = getPaymentNetwork(request);
+
   if (paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ERC20_PROXY) {
+    const { currencyInfos } = await getCurrencyInfos(paymentCurrency);
+
+    if (!currencyInfos.network) throw new Error('No network infos provided');
+
+    await checkConnectedNetwork(currencyInfos.network, ethereum);
+
     const tx = await approveErc20ForProxyConversion(
       request,
       currencyInfos.value.toLowerCase(),
@@ -85,7 +96,9 @@ export const approveERC20Transactions = async (
     );
 
     await tx.wait(1);
+  } else {
+    const approvalTx = await approveErc20(request, provider);
+
+    await approvalTx.wait(1);
   }
-  const approvalTx = await approveErc20(request, provider);
-  await approvalTx.wait(1);
 };
