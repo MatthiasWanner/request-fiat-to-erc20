@@ -8,6 +8,22 @@ const networks = {
   rinkeby: {
     chainId: '0x4',
     rpcUrl: 'https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'
+  },
+  mainnet: {
+    chainId: '0x1',
+    rpcUrl: 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'
+  },
+  fantom: {
+    chainId: '0xfa',
+    rpcUrl: 'https://rpc.ftm.tools'
+  },
+  bsc: {
+    chainId: '0x38',
+    rpcUrl: 'https://bsc-dataseed.binance.org'
+  },
+  xdai: {
+    chainId: '0x64',
+    rpcUrl: 'https://rpc.xdaichain.com'
   }
 };
 

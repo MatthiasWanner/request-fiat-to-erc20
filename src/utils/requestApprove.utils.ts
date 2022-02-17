@@ -1,10 +1,13 @@
 import {
+  approveErc20,
   approveErc20ForProxyConversion,
   checkErc20Allowance,
+  hasErc20Approval,
   utils as paymentUtils
 } from '@requestnetwork/payment-processor';
 import { AnyToERC20PaymentDetector } from '@requestnetwork/payment-detection';
 import { IRequestData } from '@requestnetwork/types/dist/client-types';
+import { ExtensionTypes } from '@requestnetwork/types';
 import { IWindowEthereum } from '../../types';
 import { checkConnectedNetwork, getWalletAddress } from './ethereum.utils';
 import { providers } from 'ethers';
@@ -13,14 +16,23 @@ import {
   getCurrencyInfos,
   prepareCalculateMaxToSpendArgs
 } from './prepareRequest.utils';
+import { getPaymentNetwork, getRequestFees } from '.';
 
 export const hasAllowance = async (
   request: IRequestData,
-  ethereum: IWindowEthereum
+  ethereum: IWindowEthereum,
+  paymentCurrency: string
 ) => {
-  const { currencyInfos, feeAmount } = getCurrencyInfos(request);
+  const paymentNetwork = getPaymentNetwork(request);
 
-  if (!currencyInfos.network) throw new Error('No network infos provided');
+  if (paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ETH_PROXY)
+    return true;
+
+  const paymentCurrencyInfos = await getCurrencyInfos(paymentCurrency);
+
+  const { currencyInfos } = paymentCurrencyInfos;
+
+  if (!currencyInfos.network) throw new Error('Currency network not provided');
 
   await checkConnectedNetwork(currencyInfos.network, ethereum);
 
@@ -28,50 +40,65 @@ export const hasAllowance = async (
 
   const [walletAddress] = await getWalletAddress(ethereum);
 
-  const proxyAddress = paymentUtils.getProxyAddress(
-    request,
-    AnyToERC20PaymentDetector.getDeploymentInformation
-  );
+  if (paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ERC20_PROXY) {
+    const proxyAddress = paymentUtils.getProxyAddress(
+      request,
+      AnyToERC20PaymentDetector.getDeploymentInformation
+    );
 
-  const maxToSpendArgs = await prepareCalculateMaxToSpendArgs(
-    currencyInfos,
-    request.currency
-  );
+    const feeAmount = getRequestFees(request);
 
-  const maxToSpend = calculateMaxToSpend(
-    +request.expectedAmount,
-    +feeAmount,
-    maxToSpendArgs.rate,
-    maxToSpendArgs.decimals,
-    3
-  );
+    const maxToSpendArgs = await prepareCalculateMaxToSpendArgs(
+      paymentCurrencyInfos,
+      request.currency
+    );
 
-  return await checkErc20Allowance(
-    walletAddress,
-    proxyAddress,
-    provider,
-    currencyInfos.value.toLowerCase(),
-    maxToSpend
-  );
+    const maxToSpend = calculateMaxToSpend(
+      +request.expectedAmount,
+      +feeAmount,
+      maxToSpendArgs.rate,
+      maxToSpendArgs.decimals,
+      3
+    );
+
+    return await checkErc20Allowance(
+      walletAddress,
+      proxyAddress,
+      provider,
+      currencyInfos.value.toLowerCase(),
+      maxToSpend
+    );
+  } else {
+    return await hasErc20Approval(request, walletAddress, provider);
+  }
 };
 
 export const approveERC20Transactions = async (
   request: IRequestData,
-  ethereum: IWindowEthereum
+  ethereum: IWindowEthereum,
+  paymentCurrency: string
 ) => {
-  const { currencyInfos } = getCurrencyInfos(request);
-
-  if (!currencyInfos.network) throw new Error('No network infos provided');
-
-  await checkConnectedNetwork(currencyInfos.network, ethereum);
-
   const provider = new providers.Web3Provider(ethereum);
 
-  const tx = await approveErc20ForProxyConversion(
-    request,
-    currencyInfos.value.toLowerCase(),
-    provider
-  );
+  const paymentNetwork = getPaymentNetwork(request);
 
-  await tx.wait(1);
+  if (paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ERC20_PROXY) {
+    const { currencyInfos } = await getCurrencyInfos(paymentCurrency);
+
+    if (!currencyInfos.network) throw new Error('No network infos provided');
+
+    await checkConnectedNetwork(currencyInfos.network, ethereum);
+
+    const tx = await approveErc20ForProxyConversion(
+      request,
+      currencyInfos.value.toLowerCase(),
+      provider
+    );
+
+    await tx.wait(1);
+  } else {
+    const approvalTx = await approveErc20(request, provider);
+
+    await approvalTx.wait(1);
+  }
 };
