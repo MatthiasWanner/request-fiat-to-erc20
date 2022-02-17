@@ -1,6 +1,7 @@
 import { RequestLogicTypes, ExtensionTypes } from '@requestnetwork/types';
 import { IRequestData } from '@requestnetwork/types/dist/client-types';
-import { utils as ethersUtils, providers, BigNumber } from 'ethers';
+import { utils as ethersUtils, BigNumber } from 'ethers';
+import { IGetCurencyInfosHandlerReturn, PaymentSettingsArgs } from 'types';
 import { cryptoCompare, currencies } from './queries.api';
 
 /**
@@ -12,20 +13,21 @@ import { cryptoCompare, currencies } from './queries.api';
  * @returns an object that provided all necessary args must be passed to the calculateMaxToSpend function
  */
 export const prepareCalculateMaxToSpendArgs = async (
-  currencyInfos: RequestLogicTypes.ICurrency,
+  currencyInfos: IGetCurencyInfosHandlerReturn,
   invoiceCurrency: string,
   requestAmount?: number,
   feeAmount?: number
 ) => {
   const slippage = 3;
 
-  const { decimals, meta } = await currencies.getOne(currencyInfos.value);
+  const { decimals, meta } = currencyInfos;
 
   const { code: referenceCurrencySymbol } = meta.exchangeInfo.cryptocompare;
 
-  const rate = (
-    await cryptoCompare.getRate(invoiceCurrency, referenceCurrencySymbol)
-  )[referenceCurrencySymbol];
+  const currency = invoiceCurrency === 'jEUR-matic' ? 'EUR' : invoiceCurrency; // Request API send jEUR-matic as invoice currency if is equal to paymentCurrency
+  const rate = (await cryptoCompare.getRate(currency, referenceCurrencySymbol))[
+    referenceCurrencySymbol
+  ];
 
   if (!rate) throw new Error('Error getting rate');
 
@@ -65,43 +67,63 @@ export const getPaymentNetwork = (
   )?.id;
 };
 
-export const getPaymentCurrencyContract = (
-  request: IRequestData
-): string | null => {
-  const paymentNetwork = getPaymentNetwork(request);
-
-  if (paymentNetwork) {
-    return request.extensions[paymentNetwork].values.acceptedTokens[0];
-  }
-
-  return null;
+/**
+ *
+ * @param request represent the request to pay as IRequestData format provided by Request API
+ * @returns  number to recover fee amount
+ */
+export const getRequestFees = (request: IRequestData): number => {
+  return +request.extensions[getPaymentNetwork(request) as string]?.values
+    .feeAmount;
 };
 
 /**
  *
  * @param request represent the request to pay as IRequestData format provided by Request API
- * @returns  an object containing currencyInfos key asICurrency type used by hasAllowance(), approveERC20Transactions(),  and requestPayment() handlers
- * @returns  an object containing feeAmount key as number used by hasAllowance(), and requestPayment() handlers
+ * @returns  an object containing currencyInfos key as ICurrency type used by hasAllowance(), approveERC20Transactions(),  and requestPayment() handlers
+ * @returns  an object containing decimals key as number used by calculateMaxToSpend()
  */
-export const getCurrencyInfos = (
-  request: IRequestData
-): {
-  feeAmount: number | string;
-  currencyInfos: RequestLogicTypes.ICurrency;
-} => {
-  const paymentCurrencyContractAddress = getPaymentCurrencyContract(request);
-  if (!paymentCurrencyContractAddress)
-    throw new Error('No payment currency contract address provided');
-
-  const { network, feeAmount = 0 } = request.extensions[
-    getPaymentNetwork(request) as string
-  ]?.values as ExtensionTypes.PnAnyToErc20.ICreationParameters;
+export const getCurrencyInfos = async (
+  paymentCurrency: string
+): Promise<IGetCurencyInfosHandlerReturn> => {
+  const {
+    type,
+    decimals,
+    hash: contractAddress,
+    network,
+    meta
+  } = await currencies.getOne(paymentCurrency);
 
   const currencyInfos: RequestLogicTypes.ICurrency = {
-    type: RequestLogicTypes.CURRENCY.ERC20,
-    value: paymentCurrencyContractAddress,
+    type,
+    value: contractAddress,
     network
   };
 
-  return { feeAmount, currencyInfos };
+  return { currencyInfos, decimals, meta };
+};
+
+export const getPaymentSettings = async (
+  request: IRequestData,
+  paymentCurrency: string
+): Promise<PaymentSettingsArgs> => {
+  const paymentCurrencyInfos = await getCurrencyInfos(paymentCurrency);
+
+  const { currencyInfos } = paymentCurrencyInfos;
+
+  const feeAmount = getRequestFees(request);
+
+  const maxToSpendArgs = await prepareCalculateMaxToSpendArgs(
+    paymentCurrencyInfos,
+    request.currency
+  );
+
+  const maxToSpend = calculateMaxToSpend(
+    +request.expectedAmount,
+    +feeAmount,
+    maxToSpendArgs.rate,
+    maxToSpendArgs.decimals,
+    3
+  );
+  return { currency: currencyInfos, maxToSpend };
 };
