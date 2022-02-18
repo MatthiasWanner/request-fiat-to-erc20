@@ -55,15 +55,6 @@ export const requestPayment = async (
       throw new Error('No account or request data provided');
     }
 
-    const paymentSettings = await getPaymentSettings(request, paymentCurrency);
-
-    const { currency: currencyInfos } = paymentSettings;
-
-    if (!currencyInfos.network)
-      throw new Error('Currency network not provided');
-
-    await checkConnectedNetwork(currencyInfos.network, ethereum);
-
     const provider = new providers.Web3Provider(ethereum);
 
     const paymentNetwork = getPaymentNetwork(request);
@@ -71,6 +62,18 @@ export const requestPayment = async (
     if (
       paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ERC20_PROXY
     ) {
+      const paymentSettings = await getPaymentSettings(
+        request,
+        paymentCurrency
+      );
+
+      const { currency: currencyInfos } = paymentSettings;
+
+      if (!currencyInfos.network)
+        throw new Error('Currency network not provided');
+
+      await checkConnectedNetwork(currencyInfos.network, ethereum);
+
       return await anyToErc20Payment(
         payerWalletAddress,
         request,
