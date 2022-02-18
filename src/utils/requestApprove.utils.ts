@@ -25,8 +25,12 @@ export const hasAllowance = async (
 ) => {
   const paymentNetwork = getPaymentNetwork(request);
 
-  if (paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ETH_PROXY)
+  if (
+    paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ETH_PROXY ||
+    paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ETH_INPUT_DATA
+  ) {
     return true;
+  }
 
   const paymentCurrencyInfos = await getCurrencyInfos(paymentCurrency);
 
